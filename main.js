@@ -69,7 +69,7 @@
   const sequences = [
     {
       cmd: 'uname -r',
-      out: '<span class="t-success">6.12.0-kernos</span>'
+      out: '<span class="t-success">7.0.6-kernos</span>'
     },
     {
       cmd: 'cat /etc/os-release | grep PRETTY',
