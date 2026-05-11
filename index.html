@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KernOS — Performance Without Compromise</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Scanline overlay -->
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- Noise texture -->
+  <div class="noise" aria-hidden="true"></div>
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <span class="logo-bracket">[</span>
+        <span class="logo-text">KERN</span>
+        <span class="logo-accent">OS</span>
+        <span class="logo-bracket">]</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#kernel">Kernel</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#build">Build</a></li>
+        <li><a href="https://github.com/palazik/KernOS" target="_blank" class="nav-github">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-grid" aria-hidden="true">
+      <canvas id="grid-canvas"></canvas>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>Arch Linux · CachyOS · BORE · ThinLTO</span>
+      </div>
+
+      <h1 class="hero-title">
+        <span class="title-line" data-text="KERN">KERN</span>
+        <span class="title-line accent" data-text="OS">OS</span>
+      </h1>
+
+      <p class="hero-sub">A Linux distribution built for<br /><em>performance and simplicity.</em></p>
+      <p class="hero-desc">No bloat. No compromises. Just a fast, clean system — optimized from the kernel up.</p>
+
+      <div class="hero-cta">
+        <a href="#install" class="btn-primary">
+          <span>Install KernOS</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </a>
+        <a href="https://github.com/palazik/KernOS" target="_blank" class="btn-ghost">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          View Source
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-val" id="stat-hz">1000</span>
+          <span class="stat-unit">Hz</span>
+          <span class="stat-label">tick rate</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-val">O3</span>
+          <span class="stat-label">optimization</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-val">BORE</span>
+          <span class="stat-label">scheduler</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-val">BBR</span>
+          <span class="stat-label">tcp stack</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-terminal" aria-label="Terminal showing KernOS boot">
+      <div class="terminal-bar">
+        <span class="t-dot red"></span>
+        <span class="t-dot yellow"></span>
+        <span class="t-dot green"></span>
+        <span class="t-title">kernos@live ~ $</span>
+      </div>
+      <div class="terminal-body" id="terminal-body">
+        <div class="t-line"><span class="t-dim">$</span> <span class="t-cmd">uname -r</span></div>
+        <div class="t-line t-out">6.15.0-kernos</div>
+        <div class="t-line"><span class="t-dim">$</span> <span class="t-cmd">cat /proc/scheduler</span></div>
+        <div class="t-line t-out"><span class="t-green">BORE</span> (Burst-Oriented Response Enhancer)</div>
+        <div class="t-line"><span class="t-dim">$</span> <span class="t-cmd">sysctl kernel.sched_bore</span></div>
+        <div class="t-line t-out">kernel.sched_bore = <span class="t-cyan">1</span></div>
+        <div class="t-line"><span class="t-dim">$</span> <span class="t-cmd">cat /proc/cpuinfo | grep "model name" | head -1</span></div>
+        <div class="t-line t-out">model name : AMD Ryzen 9 9950X @ 4.30GHz</div>
+        <div class="t-line"><span class="t-dim">$</span> <span class="t-cmd">systemd-analyze</span></div>
+        <div class="t-line t-out">Startup finished in <span class="t-green">1.243s</span> (kernel) + <span class="t-cyan">2.107s</span> (userspace)</div>
+        <div class="t-line blink-line"><span class="t-dim">$</span> <span class="cursor">█</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHILOSOPHY -->
+  <section class="philosophy" id="philosophy">
+    <div class="container">
+      <div class="philosophy-grid">
+        <div class="phil-card" data-reveal>
+          <div class="phil-icon">⚡</div>
+          <h3>No bloat</h3>
+          <p>If it's not needed, it's not included. Every package earns its place on the system.</p>
+        </div>
+        <div class="phil-card" data-reveal>
+          <div class="phil-icon">🎯</div>
+          <h3>Performance first</h3>
+          <p>Optimized defaults out of the box. From the scheduler to TCP — every layer tuned.</p>
+        </div>
+        <div class="phil-card" data-reveal>
+          <div class="phil-icon">🔍</div>
+          <h3>Transparent</h3>
+          <p>You know exactly what's running on your system. Open source, reproducible builds.</p>
+        </div>
+        <div class="phil-card" data-reveal>
+          <div class="phil-icon">🏗️</div>
+          <h3>Arch foundation</h3>
+          <p>Rolling release, full AUR access, pacman. The power of Arch, without the setup.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KERNEL FEATURES -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <span class="section-tag">// kernel</span>
+        <h2 class="section-title">Built different, at the core</h2>
+        <p class="section-desc">The KernOS kernel isn't just patched — it's rebuilt with every optimization that matters for desktop performance.</p>
+      </div>
+
+      <div class="features-layout">
+        <div class="features-list">
+
+          <div class="feature-item" data-reveal>
+            <div class="feature-header">
+              <span class="feature-tag">SCHEDULER</span>
+              <span class="feature-name">BORE</span>
+            </div>
+            <h4>Burst-Oriented Response Enhancer</h4>
+            <p>Prioritizes latency-sensitive tasks without sacrificing throughput. Interactive applications feel snappier, compiles stay fast.</p>
+            <div class="feature-code">
+              <code>CONFIG_SCHED_BORE=y</code>
+              <code>CONFIG_SCHED_CLASS_EXT=y</code>
+            </div>
+          </div>
+
+          <div class="feature-item" data-reveal>
+            <div class="feature-header">
+              <span class="feature-tag">COMPILER</span>
+              <span class="feature-name">ThinLTO + O3</span>
+            </div>
+            <h4>Whole-Program Optimization</h4>
+            <p>Built with Clang, Link Time Optimization across the full kernel, and -O3 for maximum instruction-level performance.</p>
+            <div class="feature-code">
+              <code>CC=clang LD=ld.lld LLVM=1</code>
+              <code>CONFIG_LTO_CLANG_THIN=y</code>
+            </div>
+          </div>
+
+          <div class="feature-item" data-reveal>
+            <div class="feature-header">
+              <span class="feature-tag">TIMER</span>
+              <span class="feature-name">1000Hz + Tickless</span>
+            </div>
+            <h4>Full Preemption, Zero Idle Ticks</h4>
+            <p>1000Hz timer for microsecond responsiveness. NO_HZ_FULL eliminates unnecessary scheduler interrupts when cores are busy.</p>
+            <div class="feature-code">
+              <code>CONFIG_HZ_1000=y</code>
+              <code>CONFIG_NO_HZ_FULL=y</code>
+              <code>CONFIG_PREEMPT=y</code>
+            </div>
+          </div>
+
+          <div class="feature-item" data-reveal>
+            <div class="feature-header">
+              <span class="feature-tag">NETWORK</span>
+              <span class="feature-name">BBR + FQ</span>
+            </div>
+            <h4>Google's Congestion Control</h4>
+            <p>BBR TCP replaces CUBIC as default. Paired with FQ packet scheduler for significantly better throughput on all network types.</p>
+            <div class="feature-code">
+              <code>CONFIG_TCP_CONG_BBR=y</code>
+              <code>CONFIG_DEFAULT_BBR=y</code>
+            </div>
+          </div>
+
+          <div class="feature-item" data-reveal>
+            <div class="feature-header">
+              <span class="feature-tag">MEMORY</span>
+              <span class="feature-name">Transparent HugePages</span>
+            </div>
+            <h4>Always-On THP</h4>
+            <p>THP set to always (not madvise). Reduces TLB pressure, improves memory bandwidth for large workloads and games.</p>
+            <div class="feature-code">
+              <code>CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=y</code>
+            </div>
+          </div>
+
+          <div class="feature-item" data-reveal>
+            <div class="feature-header">
+              <span class="feature-tag">PATCHES</span>
+              <span class="feature-name">CachyOS + Polly</span>
+            </div>
+            <h4>Upstream Optimizations</h4>
+            <p>Built on CachyOS's pre-patched kernel tree with ACPI call support and Clang Polly loop vectorization.</p>
+            <div class="feature-code">
+              <code>bore-cachy.patch</code>
+              <code>clang-polly.patch</code>
+              <code>acpi-call.patch</code>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="features-visual" data-reveal>
+          <div class="kernel-diagram">
+            <div class="kd-title">KernOS Kernel Stack</div>
+            <div class="kd-layers">
+              <div class="kd-layer kd-app">
+                <span>Userspace Applications</span>
+              </div>
+              <div class="kd-arrow">↓</div>
+              <div class="kd-layer kd-sched">
+                <span>BORE Scheduler</span>
+                <small>sched-ext enabled</small>
+              </div>
+              <div class="kd-arrow">↓</div>
+              <div class="kd-row">
+                <div class="kd-layer kd-mem">
+                  <span>Memory</span>
+                  <small>THP Always</small>
+                </div>
+                <div class="kd-layer kd-net">
+                  <span>Network</span>
+                  <small>BBR + FQ</small>
+                </div>
+              </div>
+              <div class="kd-arrow">↓</div>
+              <div class="kd-layer kd-hw">
+                <span>Hardware (x86_64)</span>
+                <small>1000Hz · Tickless · Full Preempt</small>
+              </div>
+              <div class="kd-arrow">↓</div>
+              <div class="kd-layer kd-build">
+                <span>Built with Clang + ThinLTO + O3</span>
+              </div>
+            </div>
+            <div class="kd-badge">
+              <span class="kd-based">Based on CachyOS · Arch Foundation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KERNEL SECTION -->
+  <section class="kernel-section" id="kernel">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <span class="section-tag">// linux-kernos</span>
+        <h2 class="section-title">The custom kernel package</h2>
+        <p class="section-desc">A separate AUR-compatible PKGBUILD that installs the KernOS kernel on any Arch-based system — no full reinstall needed.</p>
+      </div>
+
+      <div class="kernel-cards">
+        <div class="kcard" data-reveal>
+          <div class="kcard-icon">📦</div>
+          <h4>PKGBUILD based</h4>
+          <p>Standard Arch Linux packaging. Install with <code>makepkg -si</code> or any AUR helper.</p>
+        </div>
+        <div class="kcard" data-reveal>
+          <div class="kcard-icon">🔄</div>
+          <h4>Auto-versioning</h4>
+          <p>Automatically tracks the latest CachyOS kernel release. Always up to date.</p>
+        </div>
+        <div class="kcard" data-reveal>
+          <div class="kcard-icon">🏗️</div>
+          <h4>CI builds</h4>
+          <p>GitHub Actions builds kernel packages on every commit. Download prebuilts from Releases.</p>
+        </div>
+        <div class="kcard" data-reveal>
+          <div class="kcard-icon">🗄️</div>
+          <h4>Pacman repo</h4>
+          <p>A ready-to-use pacman repository is generated per build. Add to <code>pacman.conf</code> and install directly.</p>
+        </div>
+      </div>
+
+      <div class="code-block" data-reveal>
+        <div class="cb-header">
+          <span class="cb-file">Install the kernel on any Arch system</span>
+          <button class="cb-copy" onclick="copyCode('install-code')">copy</button>
+        </div>
+        <pre id="install-code"><span class="c-comment"># Clone the kernel PKGBUILD</span>
+git clone https://github.com/palazik/linux-kernos
+cd linux-kernos
+
+<span class="c-comment"># Build and install (requires: clang llvm lld base-devel)</span>
+makepkg -si --noconfirm
+
+<span class="c-comment"># Verify install</span>
+uname -r  <span class="c-comment"># → 6.x.x-kernos</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL -->
+  <section class="install-section" id="install">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <span class="section-tag">// getting started</span>
+        <h2 class="section-title">Install KernOS</h2>
+        <p class="section-desc">KernOS ships as a bootable ISO built on archiso. Boot, follow the Arch installation guide, and you're done.</p>
+      </div>
+
+      <div class="install-steps">
+        <div class="step" data-reveal>
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h4>Download the ISO</h4>
+            <p>Grab the latest ISO from GitHub Releases. Built automatically by GitHub Actions on every commit to main.</p>
+            <a href="https://github.com/palazik/KernOS/releases" target="_blank" class="step-link">
+              GitHub Releases →
+            </a>
+          </div>
+        </div>
+
+        <div class="step" data-reveal>
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h4>Write to USB</h4>
+            <p>Flash the ISO to a USB drive. Supports both BIOS (syslinux) and UEFI (systemd-boot) boot modes.</p>
+            <div class="mini-code">
+              <code>dd if=kernos-*.iso of=/dev/sdX bs=4M status=progress</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-reveal>
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h4>Boot the live environment</h4>
+            <p>Boot into the live system. Networking starts automatically (Ethernet/WLAN/WWAN via DHCP). For Wi-Fi use <code>iwctl</code>.</p>
+          </div>
+        </div>
+
+        <div class="step" data-reveal>
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h4>Install with archinstall</h4>
+            <p>Run the bundled archinstall script for a guided install, or follow the Arch installation guide manually. The MOTD shows the link on boot.</p>
+            <div class="mini-code">
+              <code>archinstall</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-reveal>
+          <div class="step-num">05</div>
+          <div class="step-content">
+            <h4>Run in QEMU (optional)</h4>
+            <p>Test the ISO without hardware using the built-in run_archiso helper.</p>
+            <div class="mini-code">
+              <code>run_archiso -i out/kernos-*.iso</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUILD -->
+  <section class="build-section" id="build">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <span class="section-tag">// build it yourself</span>
+        <h2 class="section-title">Reproducible ISO builds</h2>
+        <p class="section-desc">Every ISO is built by GitHub Actions on an Arch Linux container. The full build is reproducible and open.</p>
+      </div>
+
+      <div class="build-grid">
+        <div class="build-main" data-reveal>
+          <div class="code-block">
+            <div class="cb-header">
+              <span class="cb-file">Build the ISO from source</span>
+              <button class="cb-copy" onclick="copyCode('build-code')">copy</button>
+            </div>
+            <pre id="build-code"><span class="c-comment"># Requirements</span>
+sudo pacman -S archiso
+
+<span class="c-comment"># Clone and build</span>
+git clone https://github.com/palazik/KernOS
+cd KernOS
+sudo mkarchiso -v \
+  -w /tmp/kernos-work \
+  -o out/ \
+  profile/
+
+<span class="c-comment"># ISO lands in out/</span>
+ls out/kernos-*.iso</pre>
+          </div>
+        </div>
+
+        <div class="build-side">
+          <div class="build-info" data-reveal>
+            <h4>CI Pipeline</h4>
+            <p>GitHub Actions runs on every push to <code>main</code>. The workflow:</p>
+            <ol class="ci-steps">
+              <li>Spins up Arch Linux container</li>
+              <li>Installs archiso and deps</li>
+              <li>Generates ephemeral PGP signing key</li>
+              <li>Builds the squashfs ISO</li>
+              <li>Creates SHA256/SHA512/B2 checksums</li>
+              <li>Uploads artifact (30-day retention)</li>
+            </ol>
+          </div>
+
+          <div class="build-info" data-reveal>
+            <h4>ISO Profile</h4>
+            <p>Based on archiso's <code>releng</code> profile. Boots via syslinux (BIOS) and systemd-boot (UEFI). Squashfs-compressed with xz.</p>
+            <div class="profile-tags">
+              <span class="ptag">archinstall</span>
+              <span class="ptag">fastfetch</span>
+              <span class="ptag">grml-zsh</span>
+              <span class="ptag">linux-firmware</span>
+              <span class="ptag">nvme-cli</span>
+              <span class="ptag">btrfs-progs</span>
+              <span class="ptag">+80 packages</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="roadmap-section" id="roadmap">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <span class="section-tag">// roadmap</span>
+        <h2 class="section-title">What's coming</h2>
+      </div>
+      <div class="roadmap-list">
+        <div class="roadmap-item done" data-reveal>
+          <span class="rm-check">✓</span>
+          <span>Reproducible ISO builds via GitHub Actions</span>
+        </div>
+        <div class="roadmap-item done" data-reveal>
+          <span class="rm-check">✓</span>
+          <span>Custom kernel PKGBUILD (linux-kernos)</span>
+        </div>
+        <div class="roadmap-item done" data-reveal>
+          <span class="rm-check">✓</span>
+          <span>Automated pacman repository generation</span>
+        </div>
+        <div class="roadmap-item" data-reveal>
+          <span class="rm-check">○</span>
+          <span>Custom installer</span>
+        </div>
+        <div class="roadmap-item" data-reveal>
+          <span class="rm-check">○</span>
+          <span>Optimized default kernel config</span>
+        </div>
+        <div class="roadmap-item" data-reveal>
+          <span class="rm-check">○</span>
+          <span>KernOS package repository</span>
+        </div>
+        <div class="roadmap-item" data-reveal>
+          <span class="rm-check">○</span>
+          <span>Website — kernos.sh</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-logo">
+          <span class="logo-bracket">[</span>
+          <span class="logo-text">KERN</span>
+          <span class="logo-accent">OS</span>
+          <span class="logo-bracket">]</span>
+        </div>
+        <p class="footer-desc">A Linux distribution built for performance and simplicity.<br />GPL-2.0 · Built by <a href="https://github.com/palazik" target="_blank">palazik</a></p>
+        <div class="footer-links">
+          <a href="https://github.com/palazik/KernOS" target="_blank">KernOS ISO</a>
+          <a href="https://github.com/palazik/linux-kernos" target="_blank">linux-kernos kernel</a>
+          <a href="https://wiki.archlinux.org/title/Installation_guide" target="_blank">Arch Install Guide</a>
+        </div>
+        <p class="footer-copy">Based on CachyOS &amp; Arch Linux · Linux kernel GPL-2.0-only</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
