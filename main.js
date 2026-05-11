@@ -2,7 +2,33 @@
    KernOS — main.js
    ========================================== */
 
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// ---- Noise canvas ----
+(function() {
+  const canvas = document.getElementById('noise-canvas');
+  const ctx = canvas.getContext('2d');
+  let animId;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function drawNoise() {
+    const w = canvas.width, h = canvas.height;
+    const img = ctx.createImageData(w, h);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v = Math.random() * 255 | 0;
+      d[i] = d[i+1] = d[i+2] = v;
+      d[i+3] = 20;
+    }
+    ctx.putImageData(img, 0, 0);
+    animId = requestAnimationFrame(drawNoise);
+  }
+  drawNoise();
+})();
 
 // ---- Navbar scroll ----
 (function() {
@@ -78,36 +104,18 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
   let seqIdx = 0;
   let charIdx = 0;
   let typing = true;
-  let timerId = null;
-
-  if (prefersReducedMotion) {
-    tw.textContent = sequences[0].cmd;
-    output.textContent = sequences[0].out;
-    output.className = `t-output t-${sequences[0].type}`;
-    return;
-  }
-
-  function schedule(fn, delay) {
-    if (timerId) clearTimeout(timerId);
-    timerId = setTimeout(() => {
-      timerId = null;
-      fn();
-    }, delay);
-  }
+  let pauseAfter = false;
+  let pauseTimer = null;
 
   function typeChar() {
-    if (document.hidden) {
-      return;
-    }
-
     const seq = sequences[seqIdx];
     if (typing) {
       if (charIdx < seq.cmd.length) {
         tw.textContent += seq.cmd[charIdx++];
-        schedule(typeChar, 55 + Math.random() * 40);
+        setTimeout(typeChar, 55 + Math.random() * 40);
       } else {
         typing = false;
-        schedule(showOutput, 300);
+        setTimeout(showOutput, 300);
       }
     }
   }
@@ -116,7 +124,7 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
     const seq = sequences[seqIdx];
     output.textContent = seq.out;
     output.className = `t-output t-${seq.type}`;
-    schedule(nextSeq, 2200);
+    pauseTimer = setTimeout(nextSeq, 2200);
   }
 
   function nextSeq() {
@@ -126,21 +134,11 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
     charIdx = 0;
     typing = true;
     seqIdx = (seqIdx + 1) % sequences.length;
-    schedule(typeChar, 400);
+    setTimeout(typeChar, 400);
   }
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && timerId) {
-      clearTimeout(timerId);
-      timerId = null;
-      return;
-    }
-
-    if (!document.hidden && !timerId) schedule(typeChar, 250);
-  });
-
   // Start after delay
-  schedule(typeChar, 1800);
+  setTimeout(typeChar, 1800);
 })();
 
 // ---- Animated counters ----
@@ -252,31 +250,18 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 // ---- ASCII art color animation ----
 (function() {
   const art = document.getElementById('ascii-art');
-  if (!art || prefersReducedMotion) return;
+  if (!art) return;
 
   let hue = 120; // start at green
   let dir = 1;
-  let intervalId = null;
 
-  function tick() {
-    if (document.hidden) return;
-
+  setInterval(() => {
     hue += dir * 0.5;
     if (hue > 140) dir = -1;
     if (hue < 110) dir = 1;
     art.style.color = `hsl(${hue}, 60%, 38%)`;
     art.style.textShadow = `0 0 10px hsla(${hue}, 60%, 38%, 0.6)`;
-  }
-
-  intervalId = setInterval(tick, 80);
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      clearInterval(intervalId);
-      intervalId = null;
-    } else if (!intervalId) {
-      intervalId = setInterval(tick, 80);
-    }
-  });
+  }, 50);
 })();
 
 // ---- Smooth mobile menu scroll close ----
@@ -298,17 +283,18 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 // ---- Parallax subtle hero tilt ----
 (function() {
   const hero = document.querySelector('#hero');
-  const ascii = document.querySelector('.ascii-art');
-  if (!hero || !ascii || prefersReducedMotion) return;
+  if (!hero) return;
   let rafId;
 
   window.addEventListener('mousemove', (e) => {
-    if (rafId) return;
+    if (rafId) cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(() => {
       const x = (e.clientX / window.innerWidth - 0.5) * 12;
       const y = (e.clientY / window.innerHeight - 0.5) * 8;
-      ascii.style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
-      rafId = null;
+      const ascii = document.querySelector('.ascii-art');
+      if (ascii) {
+        ascii.style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
+      }
     });
-  }, { passive: true });
+  });
 })();
