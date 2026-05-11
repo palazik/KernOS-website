@@ -37,13 +37,18 @@ body {
   position: relative;
 }
 
-/* ---- Noise canvas ---- */
-#noise-canvas {
+/* ---- Noise overlay ---- */
+.noise-overlay {
   position: fixed; inset: 0;
   width: 100%; height: 100%;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.035;
+  opacity: 0.045;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.32) 0 1px, transparent 1px),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.2) 0 1px, transparent 1px);
+  background-size: 11px 11px, 17px 17px;
+  transform: translateZ(0);
 }
 
 /* ---- Scanlines ---- */
@@ -284,8 +289,10 @@ body {
 }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .t-output { margin-top: 0.5rem; color: var(--text-dim); line-height: 1.5; }
-.t-output .t-success { color: var(--green); }
-.t-output .t-info { color: #6af; }
+.t-output .t-success,
+.t-output.t-success { color: var(--green); }
+.t-output .t-info,
+.t-output.t-info { color: #6af; }
 
 /* ---- ASCII Art ---- */
 .hero-ascii {
@@ -350,6 +357,11 @@ body {
 
 /* ==================== SECTIONS ==================== */
 .section { padding: 7rem 2rem; position: relative; z-index: 2; }
+.section,
+footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
 .section-dark { background: var(--bg-2); }
 
 .container { max-width: 1200px; margin: 0 auto; }
@@ -745,4 +757,23 @@ footer {
   .feat-num { font-size: 1.5rem; }
   .is-step { flex-direction: column; }
   .hero-title { font-size: 4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .dot,
+  .t-cursor,
+  .ascii-art {
+    animation: none !important;
+  }
 }

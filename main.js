@@ -2,33 +2,7 @@
    KernOS — main.js
    ========================================== */
 
-// ---- Noise canvas ----
-(function() {
-  const canvas = document.getElementById('noise-canvas');
-  const ctx = canvas.getContext('2d');
-  let animId;
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  function drawNoise() {
-    const w = canvas.width, h = canvas.height;
-    const img = ctx.createImageData(w, h);
-    const d = img.data;
-    for (let i = 0; i < d.length; i += 4) {
-      const v = Math.random() * 255 | 0;
-      d[i] = d[i+1] = d[i+2] = v;
-      d[i+3] = 20;
-    }
-    ctx.putImageData(img, 0, 0);
-    animId = requestAnimationFrame(drawNoise);
-  }
-  drawNoise();
-})();
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---- Navbar scroll ----
 (function() {
@@ -42,7 +16,7 @@
       });
       ticking = true;
     }
-  });
+  }, { passive: true });
 })();
 
 // ---- Hamburger ----
@@ -50,13 +24,15 @@
   const btn = document.getElementById('hamburger');
   const menu = document.getElementById('mobile-menu');
   btn.addEventListener('click', () => {
-    btn.classList.toggle('open');
-    menu.classList.toggle('open');
+    const isOpen = btn.classList.toggle('open');
+    menu.classList.toggle('open', isOpen);
+    btn.setAttribute('aria-expanded', String(isOpen));
   });
   menu.querySelectorAll('a').forEach(a => {
     a.addEventListener('click', () => {
       btn.classList.remove('open');
       menu.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
     });
   });
 })();
@@ -69,65 +45,102 @@
   const sequences = [
     {
       cmd: 'uname -r',
-      out: '<span class="t-success">7.0.6-kernos</span>'
+      out: '7.0.6-kernos',
+      type: 'success'
     },
     {
       cmd: 'cat /etc/os-release | grep PRETTY',
-      out: '<span class="t-info">PRETTY_NAME="KernOS"</span>'
+      out: 'PRETTY_NAME="KernOS"',
+      type: 'info'
     },
     {
       cmd: 'grep SCHED_BORE /boot/config-$(uname -r)',
-      out: '<span class="t-success">CONFIG_SCHED_BORE=y</span>'
+      out: 'CONFIG_SCHED_BORE=y',
+      type: 'success'
     },
     {
       cmd: 'sysctl kernel.sched_bore',
-      out: '<span class="t-success">kernel.sched_bore = 1</span>'
+      out: 'kernel.sched_bore = 1',
+      type: 'success'
     },
     {
       cmd: 'cat /proc/sys/net/ipv4/tcp_congestion_control',
-      out: '<span class="t-success">bbr</span>'
+      out: 'bbr',
+      type: 'success'
     },
     {
       cmd: 'grep "^HZ=" /boot/config-$(uname -r)',
-      out: '<span class="t-success">HZ=1000</span>'
+      out: 'HZ=1000',
+      type: 'success'
     },
   ];
 
   let seqIdx = 0;
   let charIdx = 0;
   let typing = true;
-  let pauseAfter = false;
-  let pauseTimer = null;
+  let timerId = null;
+
+  if (prefersReducedMotion) {
+    tw.textContent = sequences[0].cmd;
+    output.textContent = sequences[0].out;
+    output.className = `t-output t-${sequences[0].type}`;
+    return;
+  }
+
+  function schedule(fn, delay) {
+    if (timerId) clearTimeout(timerId);
+    timerId = setTimeout(() => {
+      timerId = null;
+      fn();
+    }, delay);
+  }
 
   function typeChar() {
+    if (document.hidden) {
+      return;
+    }
+
     const seq = sequences[seqIdx];
     if (typing) {
       if (charIdx < seq.cmd.length) {
         tw.textContent += seq.cmd[charIdx++];
-        setTimeout(typeChar, 55 + Math.random() * 40);
+        schedule(typeChar, 55 + Math.random() * 40);
       } else {
         typing = false;
-        setTimeout(showOutput, 300);
+        schedule(showOutput, 300);
       }
     }
   }
 
   function showOutput() {
-    output.innerHTML = sequences[seqIdx].out;
-    pauseTimer = setTimeout(nextSeq, 2200);
+    const seq = sequences[seqIdx];
+    output.textContent = seq.out;
+    output.className = `t-output t-${seq.type}`;
+    schedule(nextSeq, 2200);
   }
 
   function nextSeq() {
     tw.textContent = '';
-    output.innerHTML = '';
+    output.textContent = '';
+    output.className = 't-output';
     charIdx = 0;
     typing = true;
     seqIdx = (seqIdx + 1) % sequences.length;
-    setTimeout(typeChar, 400);
+    schedule(typeChar, 400);
   }
 
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && timerId) {
+      clearTimeout(timerId);
+      timerId = null;
+      return;
+    }
+
+    if (!document.hidden && !timerId) schedule(typeChar, 250);
+  });
+
   // Start after delay
-  setTimeout(typeChar, 1800);
+  schedule(typeChar, 1800);
 })();
 
 // ---- Animated counters ----
@@ -188,7 +201,11 @@
   document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const code = btn.dataset.code;
-      navigator.clipboard.writeText(code).then(() => {
+      const write = navigator.clipboard && navigator.clipboard.writeText
+        ? navigator.clipboard.writeText(code)
+        : Promise.reject(new Error('Clipboard API unavailable'));
+
+      write.then(() => {
         const orig = btn.textContent;
         btn.textContent = 'copied!';
         btn.classList.add('copied');
@@ -198,6 +215,7 @@
         }, 2000);
       }).catch(() => {
         // Fallback
+        const orig = btn.textContent;
         const ta = document.createElement('textarea');
         ta.value = code;
         document.body.appendChild(ta);
@@ -207,7 +225,7 @@
         btn.textContent = 'copied!';
         btn.classList.add('copied');
         setTimeout(() => {
-          btn.textContent = 'copy';
+          btn.textContent = orig;
           btn.classList.remove('copied');
         }, 2000);
       });
@@ -234,25 +252,41 @@
 // ---- ASCII art color animation ----
 (function() {
   const art = document.getElementById('ascii-art');
-  if (!art) return;
+  if (!art || prefersReducedMotion) return;
 
   let hue = 120; // start at green
   let dir = 1;
+  let intervalId = null;
 
-  setInterval(() => {
+  function tick() {
+    if (document.hidden) return;
+
     hue += dir * 0.5;
     if (hue > 140) dir = -1;
     if (hue < 110) dir = 1;
     art.style.color = `hsl(${hue}, 60%, 38%)`;
     art.style.textShadow = `0 0 10px hsla(${hue}, 60%, 38%, 0.6)`;
-  }, 50);
+  }
+
+  intervalId = setInterval(tick, 80);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      clearInterval(intervalId);
+      intervalId = null;
+    } else if (!intervalId) {
+      intervalId = setInterval(tick, 80);
+    }
+  });
 })();
 
 // ---- Smooth mobile menu scroll close ----
 (function() {
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
-      const target = document.querySelector(this.getAttribute('href'));
+      const href = this.getAttribute('href');
+      if (!href || href === '#') return;
+
+      const target = document.querySelector(href);
       if (target) {
         e.preventDefault();
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -264,18 +298,17 @@
 // ---- Parallax subtle hero tilt ----
 (function() {
   const hero = document.querySelector('#hero');
-  if (!hero) return;
+  const ascii = document.querySelector('.ascii-art');
+  if (!hero || !ascii || prefersReducedMotion) return;
   let rafId;
 
   window.addEventListener('mousemove', (e) => {
-    if (rafId) cancelAnimationFrame(rafId);
+    if (rafId) return;
     rafId = requestAnimationFrame(() => {
       const x = (e.clientX / window.innerWidth - 0.5) * 12;
       const y = (e.clientY / window.innerHeight - 0.5) * 8;
-      const ascii = document.querySelector('.ascii-art');
-      if (ascii) {
-        ascii.style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
-      }
+      ascii.style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
+      rafId = null;
     });
-  });
+  }, { passive: true });
 })();

@@ -13,7 +13,7 @@
 <body>
 
   <!-- Noise overlay -->
-  <canvas id="noise-canvas"></canvas>
+  <div class="noise-overlay" aria-hidden="true"></div>
 
   <!-- Scanlines -->
   <div class="scanlines"></div>
@@ -32,9 +32,9 @@
         <a href="#kernel">Kernel</a>
         <a href="#features">Features</a>
         <a href="#install">Install</a>
-        <a href="https://github.com/palazik/KernOS" target="_blank" class="nav-gh">GitHub ↗</a>
+        <a href="https://github.com/palazik/KernOS" target="_blank" rel="noopener noreferrer" class="nav-gh">GitHub ↗</a>
       </div>
-      <button class="hamburger" id="hamburger" aria-label="Menu">
+      <button class="hamburger" id="hamburger" aria-label="Menu" aria-controls="mobile-menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -43,7 +43,7 @@
       <a href="#kernel">Kernel</a>
       <a href="#features">Features</a>
       <a href="#install">Install</a>
-      <a href="https://github.com/palazik/KernOS" target="_blank">GitHub ↗</a>
+      <a href="https://github.com/palazik/KernOS" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </div>
   </nav>
 
@@ -60,7 +60,7 @@
       <p class="hero-sub">No bloat. No compromises.<br>Just a fast, clean Linux system.</p>
       <div class="hero-cta">
         <a href="#install" class="btn btn-primary">Get Started</a>
-        <a href="https://github.com/palazik/KernOS" target="_blank" class="btn btn-ghost">View Source ↗</a>
+        <a href="https://github.com/palazik/KernOS" target="_blank" rel="noopener noreferrer" class="btn btn-ghost">View Source ↗</a>
       </div>
       <div class="hero-terminal" id="hero-terminal">
         <div class="terminal-bar">
@@ -290,8 +290,8 @@
           </div>
         </div>
         <div class="pipeline-links">
-          <a href="https://github.com/palazik/linux-kernos" target="_blank" class="btn btn-outline">linux-kernos repo ↗</a>
-          <a href="https://github.com/palazik/KernOS" target="_blank" class="btn btn-outline">KernOS repo ↗</a>
+          <a href="https://github.com/palazik/linux-kernos" target="_blank" rel="noopener noreferrer" class="btn btn-outline">linux-kernos repo ↗</a>
+          <a href="https://github.com/palazik/KernOS" target="_blank" rel="noopener noreferrer" class="btn btn-outline">KernOS repo ↗</a>
         </div>
       </div>
     </div>
@@ -543,15 +543,15 @@ sudo pacman -S archiso</code></pre>
       </div>
       <p class="footer-tagline">A Linux distribution built for performance and simplicity.</p>
       <div class="footer-links">
-        <a href="https://github.com/palazik/KernOS" target="_blank">KernOS ↗</a>
-        <a href="https://github.com/palazik/linux-kernos" target="_blank">linux-kernos ↗</a>
-        <a href="https://github.com/palazik" target="_blank">palazik ↗</a>
-        <a href="https://wiki.archlinux.org/title/Installation_guide" target="_blank">Arch Wiki ↗</a>
+        <a href="https://github.com/palazik/KernOS" target="_blank" rel="noopener noreferrer">KernOS ↗</a>
+        <a href="https://github.com/palazik/linux-kernos" target="_blank" rel="noopener noreferrer">linux-kernos ↗</a>
+        <a href="https://github.com/palazik" target="_blank" rel="noopener noreferrer">palazik ↗</a>
+        <a href="https://wiki.archlinux.org/title/Installation_guide" target="_blank" rel="noopener noreferrer">Arch Wiki ↗</a>
       </div>
-      <p class="footer-copy">GPL-2.0 / GPL-3.0 · Built with 🔧 by <a href="https://github.com/palazik" target="_blank">palazik</a></p>
+      <p class="footer-copy">GPL-2.0 / GPL-3.0 · Built with 🔧 by <a href="https://github.com/palazik" target="_blank" rel="noopener noreferrer">palazik</a></p>
     </div>
   </footer>
 
-  <script src="main.js"></script>
+  <script src="main.js" defer></script>
 </body>
 </html>
